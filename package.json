@@ -1,5 +1,5 @@
 {
-  "name": "@elizaos/plugin-v3k",
+  "name": "@elizaos/plugin-entityid",
   "version": "0.0.1",
   "agentConfig": {
     "pluginType": "elizaos:plugin:1.0.0",

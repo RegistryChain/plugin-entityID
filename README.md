@@ -1,6 +1,6 @@
-# @elizaos/plugin-v3k
+# @elizaos/plugin-entityID
 
-The V3K Agent Registry Plugin for ElizaOS enables AI developers to register their agents on-chain via RegistryChain. It automates smart contract interactions, ensuring verifiable and decentralized identities for AI agents in Web3.
+The EntityID Agent Registry Plugin for ElizaOS enables AI developers to register their agents on-chain via RegistryChain. It automates smart contract interactions, ensuring verifiable and decentralized identities for AI agents in Web3.
 
 ## Overview
 
@@ -45,7 +45,7 @@ Create trust in agent to agent interactions by retrieving agent's on-chain recor
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-v3k
+npm install @elizaos/plugin-entityID
 ```
 
 ## Configuration
@@ -61,10 +61,10 @@ EVM_PRIVATE_KEY=your_private_key
 Import and register the plugin in your Eliza configuration:
 
 ```typescript
-import { suiPlugin } from "@elizaos/plugin-v3k";
+import { suiPlugin } from "@elizaos/plugin-entityID";
 
 export default {
-    plugins: [v3kPlugin],
+    plugins: [entityIDPlugin],
     // ... other configuration
 };
 ```
