@@ -7,8 +7,40 @@ The V3K Agent Registry Plugin for ElizaOS enables AI developers to register thei
 This plugin provides functionality to:
 
 - Register an AI agent on-chain
-- Update a registration (coming soon)
-- Get an agent's registration (coming soon)
+
+Show your agent to the world by pushing it's identity on-chain.
+
+```ts
+// registered data
+{
+    name: string, // agent's name
+    category: "eliza",
+    description: string, // description of the agent
+    tokenAddress?: string, // agent's token
+    platform: "eliza",
+    purpose?: string, // description of the purpose of the agent
+    github?: string,
+    endpoint?: string,
+    socials: {
+      twitter?: string,
+      telegram?: string,
+      discord?: string
+    },
+    developers: {
+      name: string,
+      email?: string,
+      address?: string
+    }[]
+  }
+```
+
+- Update a registration
+
+As you iterate on the capabilities and features of your agent, see its on-chain records evolve.
+
+- Get an agent's registration
+
+Create trust in agent to agent interactions by retrieving agent's on-chain records.
 
 ## Installation
 
