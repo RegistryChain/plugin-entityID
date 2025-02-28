@@ -342,7 +342,7 @@ export const registerEntity = async (
 
   // If there is no owner to the domain, make the register. If there is an owner skip register
   let currentEntityOwner = await checkOwner(
-    namehash(`${entityName}.entity.id`),
+    namehash(`${entityName}.ai.entity.id`),
   );
 
   // Should check if EITHER public reg is the domain owner OR connect addr is owner and has approved
