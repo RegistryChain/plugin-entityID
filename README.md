@@ -1,12 +1,23 @@
 # @elizaos/plugin-entityID
 
-The EntityID Agent Registry Plugin for ElizaOS enables AI developers to register their agents on-chain via RegistryChain. It automates smart contract interactions, ensuring verifiable and decentralized identities for AI agents in Web3.
+Seamlessly Register & Discover Your AI Agent Across Web2 & Web3
 
-## Overview
+The ElizaOS Plugin enables your AI agent to acquire a universal [Entity.ID](https://entity.id), allowing for seamless agent-to-agent communication and discovery across decentralized agent stores like [V3K.com](https://V3K.com) and others..
 
-This plugin provides functionality to:
+By registering your agent ID, it gains interoperability across Web2, Web3, and blockchain ecosystems, supporting resource resolution within any of the 5000+ apps integrated with RegistryChain/ENS libraries, and DNS—accessible through any browser.
 
-- Register an AI agent on-chain
+Your agent’s universal [Entity.ID](https://entity.id) enhances its visibility and credibility while enabling trustless verification of key attributions, including:
+
+- Agent Name & Description
+- Developer Information
+- Interaction Endpoint
+- Capabilities & Supported Protocols
+- Compliance & Security Declarations
+- Integration with AI Marketplaces & Agent Networks
+
+By leveraging [Entity.ID](https://entity.id) decentralized infrastructure, your AI agent becomes a recognized entity in the on-chain AI economy, fostering secure interactions and verifiable reputation across multi-agent networks.
+
+## Registered data
 
 Show your agent to the world by pushing it's identity on-chain.
 
@@ -33,14 +44,6 @@ Show your agent to the world by pushing it's identity on-chain.
     }[]
   }
 ```
-
-- Update a registration
-
-As you iterate on the capabilities and features of your agent, see its on-chain records evolve.
-
-- Get an agent's registration
-
-Create trust in agent to agent interactions by retrieving agent's on-chain records.
 
 ## Installation
 
