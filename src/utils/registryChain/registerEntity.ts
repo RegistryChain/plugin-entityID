@@ -1,210 +1,77 @@
 import {
-  Account,
   Address,
   BaseError,
   encodeAbiParameters,
   getContract,
   Hex,
-  isAddress,
   isAddressEqual,
   namehash,
-  parseAbi,
   RawContractError,
   toHex,
   WalletClient,
   zeroAddress,
   zeroHash,
 } from "viem";
-import { checkOwner } from "./checkOwner";
 import { packetToBytes } from "viem/ens";
-import { l1abi } from "./l1abi";
 import { simulateContract } from "viem/actions";
-import { publicClient } from "../../environment";
 
-const displayKeys = [
-  "LEI",
-  "name",
-  "address",
-  "description",
-  "url",
-  "location",
-  "avatar",
-  "entity__name",
-  "entity__address",
-  "entity__registrar",
-  "entity__type",
-  "entity__description",
-  "entity__purpose",
-  "entity__formation__date",
-  "entity__lockup__days",
-  "entity__additional__terms",
-  "entity__selected__model",
-  "entity__lookup__number",
-  "entity__code",
-  "entity__arbitrator",
-  "partner__[0]__name",
-  "partner__[0]__type",
-  "partner__[0]__wallet__address",
-  "partner__[0]__physical__address",
-  "partner__[0]__DOB",
-  "partner__[0]__is__manager",
-  "partner__[0]__is__signer",
-  "partner__[0]__lockup",
-  "partner__[0]__shares",
-  "partner__[1]__name",
-  "partner__[1]__type",
-  "partner__[1]__wallet__address",
-  "partner__[1]__physical__address",
-  "partner__[1]__DOB",
-  "partner__[1]__is__manager",
-  "partner__[1]__is__signer",
-  "partner__[1]__lockup",
-  "partner__[1]__shares",
-  "partner__[2]__name",
-  "partner__[2]__type",
-  "partner__[2]__wallet__address",
-  "partner__[2]__physical__address",
-  "partner__[2]__DOB",
-  "partner__[2]__is__manager",
-  "partner__[2]__is__signer",
-  "partner__[2]__lockup",
-  "partner__[2]__shares",
-  "partner__[3]__name",
-  "partner__[3]__type",
-  "partner__[3]__wallet__address",
-  "partner__[3]__physical__address",
-  "partner__[3]__DOB",
-  "partner__[3]__is__manager",
-  "partner__[3]__is__signer",
-  "partner__[3]__lockup",
-  "partner__[3]__shares",
-  "partner__[4]__name",
-  "partner__[4]__type",
-  "partner__[4]__wallet__address",
-  "partner__[4]__physical__address",
-  "partner__[4]__DOB",
-  "partner__[4]__is__manager",
-  "partner__[4]__is__signer",
-  "partner__[4]__lockup",
-  "partner__[4]__shares",
-  "partner__[5]__name",
-  "partner__[5]__type",
-  "partner__[5]__wallet__address",
-  "partner__[5]__physical__address",
-  "partner__[5]__DOB",
-  "partner__[5]__is__manager",
-  "partner__[5]__is__signer",
-  "partner__[5]__lockup",
-  "partner__[5]__shares",
-];
+import { CONTRACT_ADDRESSES, l1abi } from "@/config";
+import { publicClient } from "@/environment";
+import { EntityConfig } from "@/types";
 
-const generateTexts = (fields: any) => {
-  // THE PURPOSE OF THIS FUNCTION IS TO CONVERT THE ENTIRE DATA OBJECT COLLECTED INTO TEXT RECORDS FOR ALL RESOLVER TYPES
-  const texts: any[] = [];
-  fields.partners.forEach((partner: any, idx: any) => {
-    const partnerKey = "partner__[" + idx + "]__";
-    Object.keys(partner).forEach((field) => {
-      if (partner[field].type === "address" || field === "wallet__address") {
-        if (!isAddress(partner[field]?.setValue)) {
-          texts.push({ key: partnerKey + field, value: zeroAddress });
-        } else {
-          texts.push({
-            key: partnerKey + field,
-            value: partner[field]?.setValue,
-          });
-        }
-      } else if (partner[field].type === "boolean") {
-        texts.push({
-          key: partnerKey + field,
-          value: partner[field]?.setValue ? "true" : "false",
-        });
-      } else if (partner[field].type === "Date") {
-        const m = new Date().getMonth() + 1;
-        const d = new Date().getDate();
-        const y = new Date().getFullYear();
-        texts.push({ key: partnerKey + field, value: y + "-" + m + "-" + d });
-      } else if (field !== "roles") {
-        texts.push({
-          key: partnerKey + field,
-          value: partner[field]?.setValue,
-        });
-      } else if (partner[field]?.setValue) {
-        partner[field]?.setValue.forEach((role: string) => {
-          texts.push({ key: partnerKey + "is__" + role, value: "true" });
-        });
-      }
-    });
-  });
+import { checkOwner } from "@utils/ens/checkOwner";
+import { getResolverAddress } from "@utils/ens/getResolverAddress";
+import { generateTexts } from "@utils/registryChain/generateTexts";
+import { readEntityRecord } from "@utils/registryChain/readEntity";
 
-  Object.keys(fields).forEach((key) => {
-    if (key !== "partners" && displayKeys.includes(key)) {
-      texts.push({ key: key, value: fields[key]?.setValue });
-    }
-  });
-  return texts;
-};
+function getBirthDateRecords(currentEntityRecords: any) {
+  if (currentEntityRecords.birthDate) return {};
 
-function getSchemaFields(entityName: string) {
   const m = new Date().getMonth() + 1;
   const d = new Date().getDate();
   const y = new Date().getFullYear();
 
   return {
-    partners: [],
     entity__formation__date: {
       type: "Date",
-      setValue: y + "-" + m + "-" + d,
+      setValue: `${y}-${m}-${d}`,
     },
-    name: {
-      type: "string",
-      setValue: entityName,
-    },
-    entity__name: {
-      type: "string",
-      setValue: `entity-${entityName}`,
-    },
-    entity__registrar: {
-      type: "string",
-      setValue: "ai", // slug
-    },
-    entity__type: {
-      type: "string",
-      setValue: "eliza",
-    },
-    entity__selected__model: {
-      type: "string",
-      setValue: "Model 1", // TODO
+    birthDate: {
+      type: "Date",
+      setValue: `${y}-${m}-${d}`,
     },
   };
 }
 
-export const getResolverAddress = async (nodeHash: any) => {
-  let resolverAddr = zeroAddress;
-  // Check resolver type
-  try {
-    const resolverAddr = await publicClient.readContract({
-      args: [nodeHash],
-      functionName: "resolver",
-      abi: parseAbi(["function resolver(bytes32) view returns (address)"]),
-      address: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e",
-    });
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
-  return resolverAddr;
-  // if (resolverAddr === contractAddresses.DatabaseResolver) {
-  //   return await getRecordData({ domain })
-  // }
-};
+function getSchemaFields(entityConfig: EntityConfig, currentEntityRecords: any) {
+  const result: Record<string, any> = {};
 
-export function getRevertErrorData(err: unknown) {
+  for (const [key, value] of Object.entries(entityConfig)) {
+    if (Array.isArray(value)) {
+      result[key] = value; // preserve arrays like `partners`
+    } else if (typeof value === "string") {
+      result[key] = {
+        type: "string",
+        setValue: value,
+      };
+    } else {
+      throw new Error(`Unexpected type in entityConfig ${typeof value}`);
+    }
+  }
+
+  return {
+    ...getBirthDateRecords(currentEntityRecords),
+    ...result,
+  };
+}
+
+function getRevertErrorData(err: unknown) {
   if (!(err instanceof BaseError)) return undefined;
   const error = err.walk() as RawContractError;
   return error?.data as { errorName: string; args: unknown[] };
 }
 
-export async function resolverCallback(
+async function resolverCallback(
   wallet: WalletClient,
   message: any,
   resBytes: any,
@@ -227,16 +94,12 @@ export async function resolverCallback(
   return tx.hash;
 }
 
-export type CcipRequestParameters = {
+type CcipRequestParameters = {
   body: { data: Hex; signature: any; sender: Address };
   url: string;
 };
 
-export async function ccipRequest({
-  body,
-  url,
-}: CcipRequestParameters): Promise<Response> {
-  //http://localhost:2000/{sender}/{data}.json
+async function ccipRequest({ body, url }: CcipRequestParameters): Promise<Response> {
   try {
     const res = await fetch(url.replace("/{sender}/{data}.json", ""), {
       body: JSON.stringify(body, (_, value) =>
@@ -255,7 +118,7 @@ export async function ccipRequest({
   }
 }
 
-export async function handleDBStorage({
+async function handleDBStorage({
   domain,
   url,
   message,
@@ -290,15 +153,31 @@ export async function handleDBStorage({
   return requestResponse;
 }
 
-export const executeWriteToResolver = async (
+const executeWriteToResolver = async (
   wallet: WalletClient,
-  calldata: any,
+  entityName: string,
+  constitutionData: Hex[],
   callbackData: any,
 ) => {
   // IMPORTANT: Change made to gateway witout test. Should be handling POST with :{sender}/:{calldata}.json with server/this.handleRequest
 
   try {
-    await simulateContract(publicClient as any, calldata); // TODO remove any
+    await simulateContract(publicClient as any, {
+      functionName: "register",
+      args: [
+        toHex(packetToBytes(entityName)),
+        wallet.account.address,
+        BigInt(0) /* duration */,
+        zeroHash /* secret */,
+        zeroAddress /* resolver */,
+        constitutionData /* data */,
+        false /* reverseRecord */,
+        0 /* fuses */,
+        zeroHash /* extraData */,
+      ],
+      abi: l1abi,
+      address: CONTRACT_ADDRESSES.DATABASE_RESOLVER,
+    }); // TODO remove any
   } catch (err) {
     const data = getRevertErrorData(err);
     switch (data?.errorName) {
@@ -318,12 +197,7 @@ export const executeWriteToResolver = async (
           const resBytes = await res.text();
 
           if (!callbackData) return resBytes;
-          return await resolverCallback(
-            wallet,
-            message,
-            resBytes,
-            callbackData,
-          );
+          return await resolverCallback(wallet, message, resBytes, callbackData);
         }
         return "0x";
       }
@@ -333,66 +207,42 @@ export const executeWriteToResolver = async (
   }
 };
 
-export const registerEntity = async (
-  entityName: string,
-  wallet: WalletClient,
-) => {
-  const schemaFields = getSchemaFields(entityName);
-  const texts: any[] = generateTexts(schemaFields);
+export const registerOrUpdateEntity = async (entityConfig: EntityConfig, wallet: WalletClient) => {
+  const nodeHash = namehash(`${entityConfig.name}.ai.entity.id`);
 
   // If there is no owner to the domain, make the register. If there is an owner skip register
-  let currentEntityOwner = await checkOwner(
-    namehash(`${entityName}.ai.entity.id`),
-  );
+  const currentEntityOwner = await checkOwner(nodeHash);
+
+  // Read record if already registered
+  const currentEntityRecords = await readEntityRecord(nodeHash);
+
+  const schemaFields = getSchemaFields(entityConfig, currentEntityRecords);
+  const texts: any[] = generateTexts(schemaFields);
+
+  const resolverAddr = await getResolverAddress("ai.entity.id");
 
   // Should check if EITHER public reg is the domain owner OR connect addr is owner and has approved
   // If false, prevent the registration
   if (
     !isAddressEqual(currentEntityOwner, wallet.account.address) &&
-    !isAddressEqual(
-      currentEntityOwner,
-      "0x5ab83d7cf5e0f245fce2226f68f3959a78e067ad",
-    ) &&
+    !isAddressEqual(currentEntityOwner, resolverAddr) &&
     !isAddressEqual(currentEntityOwner, zeroAddress) //IN CASES OF OFFCHAIN REGISTRATION, THE ON CHAIN OWNER IS 0x0. THE GATEWAY THEN CHECKS IF 'OWNED' OFFCHAIN
   ) {
-    throw Error(
-      "The user does not have permission to deploy contracts for this domain",
-    );
+    throw Error("The user does not have permission to deploy contracts for this domain");
   }
 
+  // TODO compare records to see if need to update
+
   const constitutionData = texts.map((x) =>
-    encodeAbiParameters(
-      [{ type: "string" }, { type: "string" }],
-      [x.key, x.value],
-    ),
+    encodeAbiParameters([{ type: "string" }, { type: "string" }], [x.key, x.value]),
   );
 
-  let formationPrep: any = {};
-
-  const resolverAddr = await getResolverAddress(namehash("ai.entity.id"));
-
   try {
-    // if (resolverAddr?.toUpperCase() === contractAddressesObj.DatabaseResolver?.toUpperCase()) {
-    formationPrep = {
-      functionName: "register",
-      args: [
-        toHex(packetToBytes(entityName)),
-        wallet.account.address,
-        0 /* duration */,
-        zeroHash /* secret */,
-        zeroAddress /* resolver */,
-        constitutionData /* data */,
-        false /* reverseRecord */,
-        0 /* fuses */,
-        zeroHash /* extraData */,
-      ],
-      abi: l1abi,
-      address: "0x8c6ab6c2e78d7d2b2a6204e95d8a8874a95348a4", // contractAddresses["DatabaseResolver"]
-    };
-    await executeWriteToResolver(wallet, formationPrep, null);
+    await executeWriteToResolver(wallet, entityConfig.name, constitutionData, null);
 
     return;
   } catch (err: any) {
+    console.error(err);
     throw err;
   }
 };

@@ -1,3 +1,5 @@
+// address: 0x8c6ab6c2e78d7d2b2a6204e95d8a8874a95348a4
+
 export const l1abi = [
   {
     type: "constructor",
@@ -446,4 +448,4 @@ export const l1abi = [
     name: "TooManyCommands",
     inputs: [{ name: "max", type: "uint256", internalType: "uint256" }],
   },
-];
+] as const;
