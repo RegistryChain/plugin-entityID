@@ -1,1 +1,6 @@
 node_modules
+
+.zed
+
+.env.test
+!.env.*.example

@@ -1,5 +1,5 @@
 import { Plugin } from "@elizaos/core";
-import { EntityIDService } from "./services/entityID.service";
+import { EntityIDService } from "@services/entityID.service";
 
 export const entityIDPlugin: Plugin = {
   name: "plugin-entityID",
