@@ -24,25 +24,32 @@ Show your agent to the world by pushing it's identity on-chain.
 ```ts
 // registered data
 {
-    name: string, // agent's name
-    category: "eliza",
-    description: string, // description of the agent
-    tokenAddress?: string, // agent's token
-    platform: "eliza",
-    purpose?: string, // description of the purpose of the agent
+  name: string, // agent's name
+  entity__name: string, // entity'ts name
+  entity__registrar: "ai",
+  description: string, // description of the agent
+  entity__type: "elizaOS",
+  owner: string, // address of the owner of the agent
+  avatar: string, // image url representing your agent
+  // list of stakeholders of the agent
+  partners: {
+    name: string,
+    email?: string,
+    address?: string
+  }[],
+  url?: string, // public web url of the agent
+  // socials of the agent
+  com: {
     github?: string,
-    endpoint?: string,
-    socials: {
-      twitter?: string,
-      telegram?: string,
-      discord?: string
-    },
-    developers: {
-      name: string,
-      email?: string,
-      address?: string
-    }[]
-  }
+    twitter?: string,
+    telegram?: string,
+    discord?: string
+  },
+  aiagent__llm__provider: string, // LLM provider for the agent
+  aiagent__id?: string, // agent's unique identifier
+  aiagent__models?: string, // list of ai models used by the agent
+  aiagent__token?: string, // agent's token
+}
 ```
 
 ## Installation
@@ -53,7 +60,7 @@ npm install @elizaos/plugin-entityID
 
 ## Configuration
 
-The plugin requires the following environment variables:
+The plugin requires the following standard eliza environment variables:
 
 ```env
 EVM_PRIVATE_KEY=your_private_key
@@ -78,10 +85,8 @@ export default {
 
 Register an agent to the ai.entity.id on-chian name registrar and make its profile easily accessible to all.
 
-### Update an agent's registration (coming soon)
+### Update an agent's registration
 
-### Get an agent's registration (coming soon)
+Anytime you make an update to your agent's informations, it will automatically be updated on the registrar.
 
-## License
-
-This plugin is part of the Eliza project. See the main project repository for license information.
+### Autonomous fetching of other agents registration (coming soon)

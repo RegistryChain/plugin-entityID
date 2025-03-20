@@ -1,19 +1,40 @@
 // src/services/entityID.service.ts
 import { Service } from "@elizaos/core";
 
-// src/utils/registryChain/registerEntity.ts
+// src/environment.ts
 import {
-  BaseError,
-  encodeAbiParameters,
-  getContract as getContract3,
-  isAddressEqual,
-  namehash as namehash2,
-  toHex,
-  zeroAddress as zeroAddress3,
-  zeroHash
+  createPublicClient,
+  createWalletClient,
+  http
 } from "viem";
-import { packetToBytes } from "viem/ens";
-import { simulateContract } from "viem/actions";
+import { privateKeyToAccount } from "viem/accounts";
+import { sepolia } from "viem/chains";
+var publicClient = createPublicClient({
+  chain: sepolia,
+  transport: http(
+    "https://eth-sepolia.g.alchemy.com/v2/0szsK8kBmxSh0a4US9nlxYYkp7CMdOe-"
+  )
+});
+var getWallet = (_runtime) => {
+  const privateKey = _runtime.getSetting("EVM_PRIVATE_KEY");
+  if (!privateKey) {
+    throw new Error("EVM_PRIVATE_KEY is not set");
+  }
+  return createWalletClient({
+    account: privateKeyToAccount(privateKey),
+    chain: sepolia,
+    transport: http(
+      "https://eth-sepolia.g.alchemy.com/v2/0szsK8kBmxSh0a4US9nlxYYkp7CMdOe-"
+    )
+  });
+};
+
+// src/utils/registryChain/registerOrUpdateEntity.ts
+import {
+  isAddressEqual,
+  namehash as namehash4,
+  zeroAddress as zeroAddress4
+} from "viem";
 
 // src/config/abis/l1abi.ts
 var l1abi = [
@@ -253,7 +274,7 @@ var l1abi = [
       { name: "", type: "string", internalType: "string" }
     ],
     outputs: [],
-    stateMutability: "view"
+    stateMutability: "payable"
   },
   {
     type: "function",
@@ -675,29 +696,7 @@ var ensRegistryAbi = [
 
 // src/config/index.ts
 var CONTRACT_ADDRESSES = {
-  ENS_REGISTRY: "0x00000000000c2e074ec69a0dfb2997ba6c7d2e1e",
-  DATABASE_RESOLVER: "0x8c6ab6c2e78d7d2b2a6204e95d8a8874a95348a4"
-};
-
-// src/environment.ts
-import { createPublicClient, createWalletClient, http } from "viem";
-import { sepolia } from "viem/chains";
-var publicClient = createPublicClient({
-  chain: sepolia,
-  transport: http()
-});
-var getWallet = (_runtime) => {
-  const privateKey = runtime.getSetting(
-    "EVM_PRIVATE_KEY"
-  );
-  if (!privateKey) {
-    throw new Error("EVM_PRIVATE_KEY is not set");
-  }
-  return createWalletClient({
-    account: privateKeyToAccount(privateKey),
-    chain: sepolia,
-    transport: http()
-  });
+  ENS_REGISTRY: "0x00000000000c2e074ec69a0dfb2997ba6c7d2e1e"
 };
 
 // src/utils/ens/checkOwner.ts
@@ -727,18 +726,21 @@ var getResolverAddress = async (domain) => {
   }
   if (resolverAddr === zeroAddress) {
     try {
-      resolverAddr = await registry.read.resolver([
-        namehash(domain.split(".").slice(1).join("."))
-      ]);
+      resolverAddr = await registry.read.resolver([namehash(domain.split(".").slice(1).join("."))]);
     } catch (err) {
-      console.log(
-        "ERROR GETTING CURRENT PARENT RESOLVER ADDRESS: ",
-        err.message
-      );
+      console.log("ERROR GETTING CURRENT PARENT RESOLVER ADDRESS: ", err.message);
     }
   }
   return resolverAddr;
 };
+
+// src/utils/registryChain/readEntity.ts
+import {
+  decodeAbiParameters,
+  encodeFunctionData,
+  getContract as getContract2,
+  parseAbi
+} from "viem";
 
 // src/utils/registryChain/generateTexts.ts
 import { isAddress, zeroAddress as zeroAddress2 } from "viem";
@@ -762,82 +764,27 @@ var DISPLAY_KEYS = [
   "entity__selected__model",
   "entity__lookup__number",
   "entity__code",
-  "entity__arbitrator",
-  "partner__[0]__name",
-  "partner__[0]__type",
-  "partner__[0]__wallet__address",
-  "partner__[0]__physical__address",
-  "partner__[0]__DOB",
-  "partner__[0]__is__manager",
-  "partner__[0]__is__signer",
-  "partner__[0]__lockup",
-  "partner__[0]__shares",
-  "partner__[1]__name",
-  "partner__[1]__type",
-  "partner__[1]__wallet__address",
-  "partner__[1]__physical__address",
-  "partner__[1]__DOB",
-  "partner__[1]__is__manager",
-  "partner__[1]__is__signer",
-  "partner__[1]__lockup",
-  "partner__[1]__shares",
-  "partner__[2]__name",
-  "partner__[2]__type",
-  "partner__[2]__wallet__address",
-  "partner__[2]__physical__address",
-  "partner__[2]__DOB",
-  "partner__[2]__is__manager",
-  "partner__[2]__is__signer",
-  "partner__[2]__lockup",
-  "partner__[2]__shares",
-  "partner__[3]__name",
-  "partner__[3]__type",
-  "partner__[3]__wallet__address",
-  "partner__[3]__physical__address",
-  "partner__[3]__DOB",
-  "partner__[3]__is__manager",
-  "partner__[3]__is__signer",
-  "partner__[3]__lockup",
-  "partner__[3]__shares",
-  "partner__[4]__name",
-  "partner__[4]__type",
-  "partner__[4]__wallet__address",
-  "partner__[4]__physical__address",
-  "partner__[4]__DOB",
-  "partner__[4]__is__manager",
-  "partner__[4]__is__signer",
-  "partner__[4]__lockup",
-  "partner__[4]__shares",
-  "partner__[5]__name",
-  "partner__[5]__type",
-  "partner__[5]__wallet__address",
-  "partner__[5]__physical__address",
-  "partner__[5]__DOB",
-  "partner__[5]__is__manager",
-  "partner__[5]__is__signer",
-  "partner__[5]__lockup",
-  "partner__[5]__shares"
+  "entity__arbitrator"
 ];
 var generateTexts = (fields) => {
   var _a;
   const texts = [];
-  fields.partners.forEach((partner, idx) => {
-    var _a2, _b, _c, _d, _e, _f;
+  (_a = fields.partners) == null ? void 0 : _a.forEach((partner, idx) => {
     const partnerKey = `partner__[${idx}]__`;
-    for (const field in Object.keys(partner)) {
+    for (const field of Object.keys(partner)) {
       if (partner[field].type === "address" || field === "wallet__address") {
-        if (!isAddress((_a2 = partner[field]) == null ? void 0 : _a2.setValue)) {
+        if (!isAddress(partner[field])) {
           texts.push({ key: partnerKey + field, value: zeroAddress2 });
         } else {
           texts.push({
             key: partnerKey + field,
-            value: (_b = partner[field]) == null ? void 0 : _b.setValue
+            value: partner[field]
           });
         }
       } else if (partner[field].type === "boolean") {
         texts.push({
           key: partnerKey + field,
-          value: ((_c = partner[field]) == null ? void 0 : _c.setValue) ? "true" : "false"
+          value: partner[field] ? "true" : "false"
         });
       } else if (partner[field].type === "Date") {
         const m = (/* @__PURE__ */ new Date()).getMonth() + 1;
@@ -847,31 +794,40 @@ var generateTexts = (fields) => {
       } else if (field !== "roles") {
         texts.push({
           key: partnerKey + field,
-          value: (_d = partner[field]) == null ? void 0 : _d.setValue
+          value: partner[field]
         });
-      } else if ((_e = partner[field]) == null ? void 0 : _e.setValue) {
-        for (const role in (_f = partner[field]) == null ? void 0 : _f.setValue) {
+      } else if (partner[field]) {
+        for (const role of partner[field]) {
           texts.push({ key: `${partnerKey}is__${role}`, value: "true" });
         }
       }
     }
   });
-  for (const key in Object.keys(fields)) {
+  for (const key of Object.keys(fields)) {
     if (key !== "partners" && DISPLAY_KEYS.includes(key)) {
-      texts.push({ key, value: (_a = fields[key]) == null ? void 0 : _a.setValue });
+      texts.push({ key, value: fields[key] });
     }
   }
   return texts;
 };
 
 // src/utils/registryChain/readEntity.ts
-import {
-  decodeAbiParameters,
-  encodeFunctionData,
-  getContract as getContract2,
-  parseAbi
-} from "viem";
 async function readEntityRecord(nodeHash) {
+  const offchainRecords = await readEntityRecordOffChain(nodeHash);
+  if (offchainRecords === void 0)
+    return await readEntityRecordOnChain(nodeHash);
+  return offchainRecords;
+}
+async function readEntityRecordOffChain(nodeHash) {
+  const res = await fetch(
+    ` https://lionfish-app-7yrug.ondigitalocean.app/direct/getRecord/nodeHash=${nodeHash}.json`
+  );
+  if (res.status !== 200)
+    throw new Error(`readEntityRecordOffChain error status ${res.status}`);
+  const json = await res.json();
+  return json.data;
+}
+async function readEntityRecordOnChain(nodeHash) {
   const resolverAddress = await getResolverAddress("ai.entity.id");
   return await readResolverData(resolverAddress, nodeHash);
 }
@@ -895,13 +851,16 @@ async function readResolverData(resolverAddress, nodeHash) {
       ],
       address: resolverAddress
     });
-    const multicallResponse = await resolverContract.read.multicallView([
-      calls
-    ]);
-    const encodedTexts = decodeAbiParameters(
-      [{ type: "bytes[]" }],
-      multicallResponse
-    )[0];
+    const encodedTexts = [];
+    const SLICE_SIZE = 10;
+    for (let i = 0; i < Math.ceil(calls.length / SLICE_SIZE); i++) {
+      const multicallResponse = await resolverContract.read.multicallView([
+        calls.slice(i * SLICE_SIZE, (i + 1) * SLICE_SIZE)
+      ]);
+      encodedTexts.push(
+        ...decodeAbiParameters([{ type: "bytes[]" }], multicallResponse)[0]
+      );
+    }
     const decodedResults = encodedTexts.map(
       (result, index) => {
         var _a;
@@ -913,97 +872,46 @@ async function readResolverData(resolverAddress, nodeHash) {
         }
       }
     );
-    results = DISPLAY_KEYS.reduce(
-      (acc, key, index) => {
-        acc[key] = decodedResults[index] || "";
-        return acc;
-      },
-      {}
-    );
+    results = DISPLAY_KEYS.reduce((acc, key, index) => {
+      acc[key] = decodedResults[index] || "";
+      return acc;
+    }, {});
   } catch (err) {
     console.log("Error reading resolver data ", err.message);
   }
-  if (!results.name || !(results == null ? void 0 : results.entity__registrar))
-    throw new Error(
-      "results.name or results?.entity__registrar not registered"
-    );
+  if (!results.name || !(results == null ? void 0 : results.entity__registrar)) return void 0;
   results.domain = `${results.name}.${results.entity__registrar}.entity.id`;
   return results;
 }
 
-// src/utils/registryChain/registerEntity.ts
-function getBirthDateRecords(currentEntityRecords) {
-  if (currentEntityRecords.birthDate) return {};
-  const m = (/* @__PURE__ */ new Date()).getMonth() + 1;
-  const d = (/* @__PURE__ */ new Date()).getDate();
-  const y = (/* @__PURE__ */ new Date()).getFullYear();
-  return {
-    entity__formation__date: {
-      type: "Date",
-      setValue: `${y}-${m}-${d}`
-    },
-    birthDate: {
-      type: "Date",
-      setValue: `${y}-${m}-${d}`
-    }
-  };
-}
-function getSchemaFields(entityConfig, currentEntityRecords) {
-  const result = {};
-  for (const [key, value] of Object.entries(entityConfig)) {
-    if (Array.isArray(value)) {
-      result[key] = value;
-    } else if (typeof value === "string") {
-      result[key] = {
-        type: "string",
-        setValue: value
-      };
-    } else {
-      throw new Error(`Unexpected type in entityConfig ${typeof value}`);
-    }
-  }
-  return {
-    ...getBirthDateRecords(currentEntityRecords),
-    ...result
-  };
-}
-function getRevertErrorData(err) {
-  if (!(err instanceof BaseError)) return void 0;
-  const error = err.walk();
-  return error == null ? void 0 : error.data;
-}
-async function resolverCallback(wallet, message, resBytes, callbackData) {
-  const req = encodeAbiParameters(
-    [{ type: "bytes" }, { type: "address" }],
-    [message.callData, wallet.account.address]
-  );
-  const callbackContract = getContract3({
-    wallet,
-    args: [...callbackData.args, resBytes, req],
-    ...callbackData
-  });
-  const tx = await callbackContract.write[callbackData.functionName]([
-    ...callbackData.args,
-    resBytes,
-    req
-  ]);
-  return tx.hash;
-}
+// src/utils/registryChain/updateEntity.ts
+import {
+  namehash as namehash2
+} from "viem";
+import { simulateContract } from "viem/actions";
+
+// src/utils/registryChain/handleCcipError.ts
+import {
+  BaseError
+} from "viem";
 async function ccipRequest({
   body,
   url
 }) {
   try {
-    const res = await fetch(url.replace("/{sender}/{data}.json", ""), {
-      body: JSON.stringify(
-        body,
-        (_, value) => typeof value === "bigint" ? value.toString() : value
-      ),
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
+    const res = await fetch(
+      `${url.replace("/{sender}/{data}.json", "")}?source=elizaOS-plugin-entityID`,
+      {
+        body: JSON.stringify(
+          body,
+          (_, value) => typeof value === "bigint" ? value.toString() : value
+        ),
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
       }
-    });
+    );
     return res;
   } catch (err) {
     console.error(err);
@@ -1016,6 +924,8 @@ async function handleDBStorage({
   message,
   wallet
 }) {
+  domain.chainId += "";
+  message.expirationTimestamp += "";
   const signature = await wallet.signTypedData({
     account: wallet.account,
     domain,
@@ -1039,9 +949,90 @@ async function handleDBStorage({
   });
   return requestResponse;
 }
-var executeWriteToResolver = async (wallet, entityName, constitutionData, callbackData) => {
+function getRevertErrorData(err) {
+  if (!(err instanceof BaseError)) return void 0;
+  const error = err.walk();
+  return error == null ? void 0 : error.data;
+}
+async function handleCcipError(wallet, err) {
+  const data = getRevertErrorData(err);
+  switch (data == null ? void 0 : data.errorName) {
+    case "StorageHandledByOffChainDatabase": {
+      const [domain, url, message] = data.args;
+      let urlToUse = url;
+      if (process.env.NEXT_PUBLIC_RESOLVER_URL) {
+        urlToUse = process.env.NEXT_PUBLIC_RESOLVER_URL;
+      }
+      const res = await handleDBStorage({
+        domain,
+        url: urlToUse,
+        message,
+        wallet
+      });
+      if (res.status === 200) {
+        const resBytes = await res.text();
+        return resBytes;
+      }
+      throw new Error(`handleDBStorage returned res status ${res.status}`);
+    }
+    default:
+      console.error("error registering domain: ", { err });
+  }
+}
+
+// src/utils/registryChain/updateEntity.ts
+var executeWriteToResolver = async (wallet, nodeHash, constitutionData, resolverAddress) => {
   try {
-    await simulateContract(publicClient, {
+    await simulateContract(wallet, {
+      address: resolverAddress,
+      functionName: "setText",
+      args: [nodeHash, constitutionData.key, constitutionData.value],
+      abi: l1abi
+    });
+  } catch (err) {
+    handleCcipError(wallet, err);
+  }
+};
+var updateEntity = async (entityName, newFields, wallet, resolverAddress) => {
+  const nodeHash = namehash2(`${entityName}.ai.entity.id`);
+  const texts = generateTexts(newFields);
+  try {
+    for (const text of texts) {
+      await executeWriteToResolver(wallet, nodeHash, text, resolverAddress);
+    }
+    console.log(
+      `Name ${entityName}.ai.entity.id was updated, see it at https://v3k.com/agent/${entityName}.ai.entity.id`
+    );
+    return;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
+// src/utils/registryChain/registerEntity.ts
+import {
+  encodeAbiParameters,
+  namehash as namehash3,
+  toHex,
+  zeroAddress as zeroAddress3,
+  zeroHash
+} from "viem";
+import { packetToBytes } from "viem/ens";
+import { simulateContract as simulateContract2 } from "viem/actions";
+function getBirthDateRecords(currentEntityRecords) {
+  if (currentEntityRecords == null ? void 0 : currentEntityRecords.birthDate) return {};
+  const m = (/* @__PURE__ */ new Date()).getMonth() + 1;
+  const d = (/* @__PURE__ */ new Date()).getDate();
+  const y = (/* @__PURE__ */ new Date()).getFullYear();
+  return {
+    entity__formation__date: `${y}-${m}-${d}`,
+    birthDate: `${y}-${m}-${d}`
+  };
+}
+var executeWriteToResolver2 = async (wallet, entityName, constitutionData, resolverAddress) => {
+  try {
+    await simulateContract2(wallet, {
       functionName: "register",
       args: [
         toHex(packetToBytes(entityName)),
@@ -1055,52 +1046,20 @@ var executeWriteToResolver = async (wallet, entityName, constitutionData, callba
         zeroHash
       ],
       abi: l1abi,
-      address: CONTRACT_ADDRESSES.DATABASE_RESOLVER
+      address: resolverAddress
     });
   } catch (err) {
-    const data = getRevertErrorData(err);
-    switch (data == null ? void 0 : data.errorName) {
-      case "StorageHandledByOffChainDatabase": {
-        const [domain, url, message] = data.args;
-        let urlToUse = url;
-        if (process.env.NEXT_PUBLIC_RESOLVER_URL) {
-          urlToUse = process.env.NEXT_PUBLIC_RESOLVER_URL;
-        }
-        const res = await handleDBStorage({
-          domain,
-          url: urlToUse,
-          message,
-          wallet
-        });
-        if (res.status === 200) {
-          const resBytes = await res.text();
-          if (!callbackData) return resBytes;
-          return await resolverCallback(
-            wallet,
-            message,
-            resBytes,
-            callbackData
-          );
-        }
-        return "0x";
-      }
-      default:
-        console.error("error registering domain: ", { err });
-    }
+    return await handleCcipError(wallet, err);
   }
 };
-var registerOrUpdateEntity = async (entityConfig, wallet) => {
-  const nodeHash = namehash2(`${entityConfig.name}.ai.entity.id`);
-  const currentEntityOwner = await checkOwner(nodeHash);
+var registerEntity = async (entityConfig, wallet, resolverAddress) => {
+  const nodeHash = namehash3(`${entityConfig.name}.ai.entity.id`);
   const currentEntityRecords = await readEntityRecord(nodeHash);
-  const schemaFields = getSchemaFields(entityConfig, currentEntityRecords);
+  const schemaFields = {
+    ...getBirthDateRecords(currentEntityRecords),
+    ...entityConfig
+  };
   const texts = generateTexts(schemaFields);
-  const resolverAddr = await getResolverAddress("ai.entity.id");
-  if (!isAddressEqual(currentEntityOwner, wallet.account.address) && !isAddressEqual(currentEntityOwner, resolverAddr) && !isAddressEqual(currentEntityOwner, zeroAddress3)) {
-    throw Error(
-      "The user does not have permission to deploy contracts for this domain"
-    );
-  }
   const constitutionData = texts.map(
     (x) => encodeAbiParameters(
       [{ type: "string" }, { type: "string" }],
@@ -1108,16 +1067,59 @@ var registerOrUpdateEntity = async (entityConfig, wallet) => {
     )
   );
   try {
-    await executeWriteToResolver(
+    await executeWriteToResolver2(
       wallet,
       entityConfig.name,
       constitutionData,
-      null
+      resolverAddress
+    );
+    console.log(
+      `Name ${entityConfig.name}.ai.entity.id is registered, see it at https://v3k.com/agent/${entityConfig.name}.ai.entity.id`
     );
     return;
   } catch (err) {
     console.error(err);
     throw err;
+  }
+};
+
+// src/utils/registryChain/registerOrUpdateEntity.ts
+var registerOrUpdateEntity = async (entityConfig, wallet) => {
+  var _a;
+  const nodeHash = namehash4(`${entityConfig.name}.ai.entity.id`);
+  const currentEntityOwner = await checkOwner(nodeHash);
+  const resolverAddr = await getResolverAddress("ai.entity.id");
+  if (currentEntityOwner && !isAddressEqual(currentEntityOwner, wallet.account.address) && !isAddressEqual(currentEntityOwner, resolverAddr) && !isAddressEqual(currentEntityOwner, zeroAddress4)) {
+    throw new Error(
+      `Name ${entityConfig.name} is already owned by ${currentEntityOwner}, please change it to an available name`
+    );
+  }
+  const currentEntityRecords = await readEntityRecord(nodeHash);
+  if (currentEntityRecords === void 0) {
+    console.log(`Registering ${entityConfig.name}.ai.entity.id`);
+    await registerEntity(entityConfig, wallet, resolverAddr);
+  } else {
+    if (((_a = currentEntityRecords.owner) == null ? void 0 : _a.toLowerCase()) !== wallet.account.address.toLowerCase()) {
+      throw new Error(
+        `Name ${entityConfig.name} is already owned by ${currentEntityRecords.owner}, please change it to an available name`
+      );
+    }
+    const newFields = {};
+    for (const key in entityConfig) {
+      if (currentEntityRecords[key] === void 0 || currentEntityRecords[key] !== entityConfig[key]) {
+        newFields[key] = entityConfig[key];
+      }
+    }
+    if (Object.keys(newFields).length === 0) {
+      console.log(
+        `Registration up to date for ${entityConfig.name}.ai.entity.id, , see it at https://v3k.com/agent/${entityConfig.name}.ai.entity.id`
+      );
+      return;
+    }
+    console.log(
+      `Updating records ${Object.keys(newFields).join(", ")} for ${entityConfig.name}.ai.entity.id`
+    );
+    await updateEntity(entityConfig.name, newFields, wallet, resolverAddr);
   }
 };
 
@@ -1129,7 +1131,6 @@ var EntityIDService = class _EntityIDService extends Service {
     return _EntityIDService.getInstance();
   }
   async initialize(_runtime) {
-    var _a;
     const wallet = getWallet(_runtime);
     const bio = Array.isArray(_runtime.character.bio) ? _runtime.character.bio.join(" ") : _runtime.character.bio;
     const entityConfig = {
@@ -1139,19 +1140,14 @@ var EntityIDService = class _EntityIDService extends Service {
       entity__name: _runtime.character.name,
       entity__registrar: "ai",
       description: bio,
-      // avatar: _runtime.character.nft.prompt
-      keywords: _runtime.character.topics.join(","),
-      entity__selected__model: _runtime.character.modelProvider,
-      entity__eliza__plugins: _runtime.character.plugins.join(","),
       // generic fields
       entity__type: "elizaOS",
-      location: "elizaOS",
-      // com.github: {repo's remote url}
       owner: wallet.account.address,
-      "com.twitter": (_a = _runtime.character.twitterProfile) == null ? void 0 : _a.username,
-      ...process.env.AGENT_URL && { url: process.env.AGENT_URL },
-      ...process.env.AGENT_API_URL && {
-        entrypoint__url: process.env.AGENT_API_URL
+      // AI agent fields
+      aiagent__id: _runtime.character.id,
+      aiagent__llm__provider: _runtime.character.modelProvider,
+      ..._runtime.token !== null && {
+        aiagent__token: _runtime.token
       }
     };
     await registerOrUpdateEntity(entityConfig, wallet);

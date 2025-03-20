@@ -1,5 +1,7 @@
 import { Address } from "viem";
 
+export type EntityRecords = Record<string, string | null>;
+
 export type EntityConfig = {
   /**
    * character fields
@@ -8,20 +10,22 @@ export type EntityConfig = {
   entity__name: string;
   entity__registrar: "ai";
   description: string;
-  keywords: string;
-  entity__selected__model: string;
-  entity__eliza__plugins: string;
 
   /**
    * generic fields
    */
   entity__type: "elizaOS";
-  location: "elizaOS";
   // com.github: {repo's remote url}
   owner: Address;
-  "com.twitter"?: string;
   avatar?: string;
+  partners?: [];
   url?: string;
-  entrypoint__url?: string;
-  partners: [];
+
+  /**
+   * AI agent fields
+   */
+  aiagent__llm__provider: string;
+  aiagent__id?: string;
+  aiagent__models?: string[];
+  aiagent__token?: Address;
 };

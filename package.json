@@ -13,23 +13,28 @@
   "scripts": {
     "build": "tsup --format esm --dts",
     "dev": "tsup --format esm --dts --watch",
-    "lint": "biome check src/",
-    "lint:fix": "biome check --apply src/",
+    "lint": "biome check ./",
+    "lint:fix": "biome check --write ./",
     "format": "biome format src/",
     "format:fix": "biome format --write src/",
-    "test": "vitest run"
+    "test": "vitest run --testTimeout 100000",
+    "prepare": "husky"
   },
   "author": "Pybast, RegistryChain",
   "license": "ISC",
   "description": "The V3K Agent Registry Plugin for ElizaOS enables AI developers to register their agents on-chain via RegistryChain. It automates smart contract interactions, ensuring verifiable and decentralized identities for AI agents in Web3.",
   "dependencies": {
     "@elizaos/core": "^0.25.9",
+    "dotenv": "^16.4.7",
     "viem": "^2.23.5"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "husky": "^9.1.7",
     "tsup": "^8.4.0",
     "typescript": "^5.8.2",
+    "vite": "^6.2.2",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.8"
   }
 }

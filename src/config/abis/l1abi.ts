@@ -237,7 +237,7 @@ export const l1abi = [
       { name: "", type: "string", internalType: "string" },
     ],
     outputs: [],
-    stateMutability: "view",
+    stateMutability: "payable",
   },
   {
     type: "function",
